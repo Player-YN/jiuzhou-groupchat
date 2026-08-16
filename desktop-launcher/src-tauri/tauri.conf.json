@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "九洲一号群",
+  "version": "0.1.0",
+  "identifier": "com.xiuzhen.launcher",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "九洲一号群",
+        "width": 1100,
+        "height": 700,
+        "minWidth": 900,
+        "minHeight": 600,
+        "transparent": false,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "center": true,
+        "resizable": true,
+        "visible": true,
+        "backgroundColor": "#1a1a1f",
+        "url": "index.html"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.ico"
+    ],
+    "category": "Social",
+    "shortDescription": "九洲一号群启动器",
+    "longDescription": "Tauri 2 桌面启动器, 套壳九洲一号群 web 端, 模拟 QQ/微信/Discord 三栏聊天布局"
+  }
+}

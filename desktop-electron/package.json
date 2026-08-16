@@ -1,0 +1,15 @@
+{
+  "name": "jiuzhou-electron",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fixed-size Electron shell for 九洲一号群 — loads the Next.js frontend without a second chrome.",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron . --no-spawn",
+    "start:all": "electron .",
+    "dev": "electron . --no-spawn"
+  },
+  "devDependencies": {
+    "electron": "^34.0.0"
+  }
+}

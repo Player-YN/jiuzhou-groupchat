@@ -1,0 +1,84 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.local
+*.db
+*.sqlite
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+
+# Logs
+*.log
+backend/tests/e2e_output.txt
+backend/tests/screenshots/
+backend/tests/__pycache__/
+
+# Runtime PIDs (spawned by detached Node helpers)
+backend/.uvicorn.pid
+backend/.uvicorn_*.err
+backend/.uvicorn_*.err.log
+frontend/.next_server.pid
+
+# ----- Verifier / audit working artefacts (per-session, not source) -----
+.harness/
+.harness/**
+frontend/.harness/
+frontend/.harness/**
+RE_VERIFICATION_*.md
+*.audit.md
+VERIFIER_REPORT_*.md
+
+# ----- Frontend dev / build / probe logs (already *.log above, but explicit) -----
+next_*.log
+lot2_*.log
+screenshot_run.log
+frontend/.next/
+frontend/public/runtime-config.js
+backend/.groupchat-ports.env
+
+# ----- T10 cleanup: explicit audit / runtime log patterns (NEVER commit) -----
+# Catch-all *.log already above, but be explicit for the file families we
+# historically leaked (uvicorn output, cron logs, smoke runs, bff restart).
+*.log
+backend/.uvicorn_*.log
+backend/uvicorn_*.log
+backend/lot2_*.log
+backend/stage*.log
+backend/smoke_*.log
+backend/minimax_*.log
+frontend/next_*.log
+frontend/lot2_*.log
+frontend/screenshot_*.log
+bff-restart*.log
+
+# git worktrees (local parallel agents)
+.worktree/
+.grok/
+.deepeval/
+.agents/
+
+
+backend/.groupchat.lock
+backend/.groupchat-ports.env
+

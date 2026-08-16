@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>九洲一号群 — Stage 5-B Mock</title>
+  <style>
+    /* ===== 修真群主题色与字体（与 globals.css 一致） ===== */
+    :root {
+      --bg: #F5F1E8;
+      --bg-2: #FAF7F0;
+      --panel: #FFFEFB;
+      --border: rgba(120, 100, 80, 0.18);
+      --ink: #3f3f46;
+      --muted: #71717a;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background:
+        radial-gradient(at 20% 10%, rgba(217, 119, 6, 0.06) 0px, transparent 45%),
+        radial-gradient(at 80% 20%, rgba(192, 38, 211, 0.05) 0px, transparent 45%),
+        radial-gradient(at 0% 80%, rgba(5, 150, 105, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(2, 132, 199, 0.05) 0px, transparent 50%),
+        linear-gradient(135deg, #F5F1E8 0%, #FAF7F0 50%, #F5F1E8 100%);
+      color: var(--ink);
+      font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC",
+        "Times New Roman", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system,
+        "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+      min-height: 100vh;
+    }
+    /* 修真风格纹理 */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        repeating-linear-gradient(180deg, transparent 0px, transparent 8px, rgba(120, 100, 80, 0.025) 8px, rgba(120, 100, 80, 0.025) 9px),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 14px, rgba(120, 100, 80, 0.018) 14px, rgba(120, 100, 80, 0.018) 15px),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.40  0 0 0 0 0.32  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      background-size: auto, auto, 180px 180px;
+      mix-blend-mode: multiply;
+      opacity: 0.65;
+    }
+
+    /* ===== App layout ===== */
+    .app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    /* ===== Header ===== */
+    header.room {
+      border-bottom: 1px solid rgba(120, 100, 80, 0.18);
+      background: rgba(255, 255, 251, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 12px 24px;
+      box-shadow: 0 1px 2px rgba(120, 100, 80, 0.06);
+    }
+    .room .row {
+      max-width: 1024px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .room .brand { display: flex; align-items: center; gap: 12px; }
+    .room .logo {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #fde68a 0%, #fda4af 50%, #f0abfc 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: bold; color: #27272a;
+      box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.4);
+    }
+    .room h1 { font-size: 16px; font-weight: 600; color: #27272a; margin: 0; }
+    .room .sub { font-size: 12px; color: #71717a; margin: 0; }
+    .room .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid #e4e4e7;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 999px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .chip .emoji { font-size: 14px; line-height: 1; }
+    .chip .name { font-weight: 600; }
+    .chip .realm {
+      background: #f4f4f5; padding: 1px 4px; border-radius: 4px;
+      font-size: 9px; color: #71717a; font-weight: 500;
+    }
+    .status {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid #e4e4e7; background: #fff;
+      padding: 5px 10px; border-radius: 999px; font-size: 11px;
+      color: #27272a; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .status .dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2); }
+    .status .count { font-size: 10px; color: #71717a; }
+    .open-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid #d4d4d8; background: #fff;
+      padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      color: #3f3f46; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #fafafa; }
+
+    /* ===== Message list ===== */
+    main {
+      flex: 1; overflow-y: auto; padding: 24px;
+    }
+    .thread {
+      max-width: 768px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px;
+    }
+    .empty {
+      margin-top: 64px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+    }
+    .empty .icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: linear-gradient(135deg, #fef3c7 0%, #fce7f3 50%, #fae8ff 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.4);
+    }
+    .empty .t1 { font-size: 14px; font-weight: 500; color: #3f3f46; }
+    .empty .t2 { font-size: 12px; color: #71717a; }
+
+    /* ===== Time divider ===== */
+    .time-divider {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      margin: 16px 0;
+    }
+    .time-divider .line { flex: 1; max-width: 80px; height: 1px;
+      background: linear-gradient(90deg, transparent, #d4d4d8, transparent); }
+    .time-divider .label {
+      border: 1px solid #e4e4e7; background: rgba(255, 255, 255, 0.7);
+      padding: 4px 12px; border-radius: 999px;
+      font-size: 11px; color: #71717a; font-weight: 500; letter-spacing: 0.02em;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    /* ===== AI bubble ===== */
+    .ai-row { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+    .ai-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #71717a; padding-left: 56px; }
+    .ai-meta .name { font-weight: 600; }
+    .ai-meta .realm-tag {
+      background: #f4f4f5; border: 1px solid #e4e4e7;
+      padding: 1px 6px; border-radius: 4px;
+      font-size: 10px; color: #71717a; font-weight: 500;
+    }
+    .ai-meta .round {
+      background: #f4f4f5; border: 1px solid #e4e4e7;
+      padding: 1px 6px; border-radius: 999px;
+      font-size: 9px; color: #a1a1aa; font-weight: 500;
+    }
+    .ai-body { display: flex; align-items: flex-end; gap: 8px; }
+    .ai-bubble {
+      position: relative;
+      max-width: 80%;
+      overflow: hidden;
+      border: 1px solid #e4e4e7;
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: 14px; line-height: 1.7;
+      color: #27272a;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .ai-bubble .stripe {
+      position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+    }
+    .ai-bubble .text { position: relative; }
+    .ai-time {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 10px; color: #a1a1aa; padding-left: 56px;
+    }
+    .ai-time .dot { width: 6px; height: 6px; border-radius: 50%; opacity: 0.6; }
+
+    /* Avatar */
+    .avatar {
+      position: relative;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+      font-size: 22px;
+    }
+    .avatar .tag {
+      position: absolute;
+      bottom: -4px; right: -4px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #52525b; font-weight: 600; font-size: 9px;
+      border-radius: 999px; border: 1px solid #d4d4d8;
+      padding: 1px 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      white-space: nowrap;
+      line-height: 1.5;
+    }
+
+    /* User bubble */
+    .user-row { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .user-body { display: flex; align-items: flex-end; gap: 8px; }
+    .user-bubble {
+      position: relative;
+      max-width: 80%;
+      border: 1px solid #bae6fd;
+      background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%);
+      border-radius: 16px;
+      padding: 10px 16px;
+      font-size: 14px; line-height: 1.7;
+      color: #27272a;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .user-bubble .stripe {
+      position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+      background: linear-gradient(180deg, #38bdf8, #3b82f6);
+      border-top-left-radius: 16px; border-bottom-left-radius: 16px;
+    }
+    .user-bubble .me { font-size: 11px; font-weight: 600; color: #0369a1; margin-bottom: 2px; }
+    .user-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #38bdf8, #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 16px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    .user-time { font-size: 10px; color: #a1a1aa; padding-right: 56px; }
+
+    /* System */
+    .sys-row { display: flex; justify-content: center; margin: 8px 0; }
+    .sys-pill {
+      border: 1px solid #e4e4e7; background: rgba(255, 255, 255, 0.7);
+      padding: 4px 12px; border-radius: 999px;
+      font-size: 11px; color: #71717a; letter-spacing: 0.02em;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    /* @mention highlight */
+    .mention {
+      border-radius: 6px;
+      padding: 0 4px;
+      font-weight: 700;
+      background-image: linear-gradient(135deg, rgba(252, 211, 77, 0.35) 0%, rgba(251, 146, 60, 0.3) 100%);
+      box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.25);
+      white-space: nowrap;
+    }
+
+    /* ===== Composer (footer) ===== */
+    footer.composer {
+      border-top: 1px solid rgba(120, 100, 80, 0.18);
+      background: rgba(255, 255, 251, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 16px 24px;
+    }
+    .composer .inner { max-width: 768px; margin: 0 auto; }
+    .composer .input-row {
+      display: flex; align-items: flex-end; gap: 8px;
+      border: 1px solid rgba(120, 100, 80, 0.2);
+      background: #fff;
+      border-radius: 16px; padding: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05), inset 0 0 0 1px rgba(255,255,255,0.5);
+    }
+    .composer textarea {
+      min-height: 40px; max-height: 128px;
+      flex: 1; resize: none; background: transparent;
+      border: 0; outline: 0;
+      padding: 8px 12px; font-size: 14px;
+      color: #27272a; font-family: inherit;
+    }
+    .composer textarea::placeholder { color: #a1a1aa; }
+    .send-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+      color: #fff; font-weight: 600; font-size: 14px;
+      padding: 8px 16px; border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border: 0; cursor: pointer;
+    }
+    .send-btn:hover { filter: brightness(1.08); }
+    .composer .hint {
+      margin-top: 8px; display: flex; justify-content: space-between;
+      font-size: 10px; color: #71717a;
+    }
+
+    /* ===== Sidebar (drawer) ===== */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(63, 63, 70, 0.3);
+      backdrop-filter: blur(4px);
+      z-index: 30;
+    }
+    aside.sidebar {
+      position: fixed; right: 0; top: 0; height: 100%;
+      width: 320px; max-width: 90vw;
+      background: linear-gradient(180deg, #FAF7F0 0%, #F5F1E8 100%);
+      border-left: 1px solid rgba(120, 100, 80, 0.18);
+      box-shadow: -8px 0 24px rgba(120, 100, 80, 0.12);
+      z-index: 40;
+      display: flex; flex-direction: column;
+    }
+    .sidebar .head {
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(120, 100, 80, 0.18);
+      padding: 12px 16px;
+    }
+    .sidebar .head .brand {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar .head .logo-sm {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(135deg, #fde68a, #fda4af, #f0abfc);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.4);
+    }
+    .sidebar .head .ttl { font-size: 14px; font-weight: 600; color: #27272a; }
+    .sidebar .head .sub { font-size: 10px; color: #71717a; }
+    .sidebar .close {
+      border: 0; background: transparent;
+      padding: 4px; border-radius: 6px;
+      color: #71717a; cursor: pointer;
+    }
+    .sidebar .close:hover { background: rgba(120, 100, 80, 0.1); color: #3f3f46; }
+    .sidebar .body { flex: 1; overflow-y: auto; padding: 12px; }
+    .sidebar .sec {
+      padding: 0 4px; margin-bottom: 8px;
+      font-size: 10px; font-weight: 600; color: #a1a1aa;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .sidebar ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .sidebar li button {
+      position: relative; width: 100%;
+      border: 1px solid rgba(120, 100, 80, 0.18);
+      border-radius: 12px;
+      padding: 10px 12px 10px 16px;
+      cursor: pointer;
+      text-align: left;
+      background: var(--card-bg, #fff);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      transition: transform 0.18s, box-shadow 0.18s;
+      overflow: hidden;
+    }
+    .sidebar li button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -8px rgba(120, 100, 80, 0.18);
+    }
+    .sidebar li button .stripe {
+      position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+    }
+    .sidebar li .row { display: flex; align-items: center; gap: 12px; padding-left: 8px; }
+    .sidebar li .name { font-size: 14px; font-weight: 600; }
+    .sidebar li .online { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; color: #059669; font-weight: 500; }
+    .sidebar li .online .dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 2px #ecfdf5; }
+    .sidebar li .row2 {
+      display: flex; align-items: center; gap: 6px; margin-top: 2px;
+      font-size: 10px; color: #71717a;
+    }
+    .sidebar li .realm-mini {
+      background: rgba(255,255,255,0.6); padding: 1px 6px; border-radius: 4px;
+      font-size: 10px; color: #52525b; font-weight: 500;
+      border: 1px solid #e4e4e7;
+    }
+    .sidebar li .row3 {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 4px; font-size: 9px; color: #a1a1aa;
+    }
+    .sidebar li .row3 .hint { opacity: 0; transition: opacity 0.18s; }
+    .sidebar li button:hover .row3 .hint { opacity: 1; color: #b45309; }
+    .sidebar .foot {
+      margin-top: 16px; border: 1px solid rgba(120, 100, 80, 0.18);
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 8px; padding: 12px;
+      font-size: 10px; line-height: 1.6; color: #71717a;
+    }
+    .sidebar .foot .ttl { font-weight: 600; color: #52525b; margin-bottom: 4px; }
+    .sidebar .foot ul { list-style: disc; padding-left: 16px; gap: 2px; }
+
+    /* role-specific colors */
+    .stripe-shu-hang   { background: linear-gradient(180deg, #fbbf24, #f59e0b); }
+    .stripe-yao-shi    { background: linear-gradient(180deg, #34d399, #10b981); }
+    .stripe-san-lang   { background: linear-gradient(180deg, #fb7185, #e11d48); }
+    .stripe-bei-he     { background: linear-gradient(180deg, #38bdf8, #0284c7); }
+    .stripe-bai-qianbei{ background: linear-gradient(180deg, #94a3b8, #64748b); }
+    .stripe-ling-die   { background: linear-gradient(180deg, #e879f9, #c026d3); }
+
+    .av-shu-hang   { background: linear-gradient(135deg, #fcd34d, #fbbf24, #f59e0b); }
+    .av-yao-shi    { background: linear-gradient(135deg, #6ee7b7, #34d399, #10b981); }
+    .av-san-lang   { background: linear-gradient(135deg, #fda4af, #fb7185, #e11d48); }
+    .av-bei-he     { background: linear-gradient(135deg, #7dd3fc, #38bdf8, #0284c7); }
+    .av-bai-qianbei{ background: linear-gradient(135deg, #e2e8f0, #cbd5e1, #94a3b8); }
+    .av-ling-die   { background: linear-gradient(135deg, #f0abfc, #e879f9, #c026d3); }
+
+    .card-shu-hang    { background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+    .card-yao-shi     { background: linear-gradient(135deg, #ecfdf5, #d1fae5); }
+    .card-san-lang    { background: linear-gradient(135deg, #fff1f2, #ffe4e6); }
+    .card-bei-he      { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
+    .card-bai-qianbei { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+    .card-ling-die    { background: linear-gradient(135deg, #fdf4ff, #fae8ff); }
+
+    .name-shu-hang   { color: #b45309; }
+    .name-yao-shi    { color: #047857; }
+    .name-san-lang   { color: #be123c; }
+    .name-bei-he     { color: #0369a1; }
+    .name-bai-qianbei{ color: #475569; }
+    .name-ling-die   { color: #a21caf; }
+
+    .dot-shu-hang   { background: #fbbf24; }
+    .dot-yao-shi    { background: #34d399; }
+    .dot-san-lang   { background: #fb7185; }
+    .dot-bei-he     { background: #38bdf8; }
+    .dot-bai-qianbei{ background: #94a3b8; }
+    .dot-ling-die   { background: #e879f9; }
+
+    /* hide / show helpers */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <!-- ============================================================
+       Variant A: 修真群对话 (no sidebar) — desktop + mobile 都用这个
+       ============================================================ -->
+  <div id="variant-a" class="app">
+    <header class="room">
+      <div class="row">
+        <div class="brand">
+          <div class="logo">☯</div>
+          <div>
+            <h1>九洲一号群</h1>
+            <p class="sub">修真聊天群 · 6 友</p>
+          </div>
+        </div>
+        <div class="chips">
+          <span class="chip"><span class="emoji">🌟</span><span class="name name-shu-hang">宋书航</span><span class="realm">灵尊</span></span>
+          <span class="chip"><span class="emoji">💊</span><span class="name name-yao-shi">药师</span><span class="realm">八品药</span></span>
+          <span class="chip"><span class="emoji">🗡️</span><span class="name name-san-lang">狂刀三浪</span><span class="realm">六品刀</span></span>
+          <span class="chip"><span class="emoji">🌊</span><span class="name name-bei-he">北河散人</span><span class="realm">八品散</span></span>
+          <span class="chip"><span class="emoji">👻</span><span class="name name-bai-qianbei">白前辈</span><span class="realm">九品上</span></span>
+          <span class="chip"><span class="emoji">🦋</span><span class="name name-ling-die">灵蝶尊者</span><span class="realm">八品尊</span></span>
+          <span class="status"><span class="dot"></span>Connected<span class="count">· 6 agents</span></span>
+          <button class="open-btn" data-testid="open-sidebar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            群友
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="thread">
+        <div class="time-divider" data-time-divider="1740000000000">
+          <div class="line"></div>
+          <div class="label">今天 14:20</div>
+          <div class="line"></div>
+        </div>
+
+        <!-- User message -->
+        <div class="user-row" data-bubble-id="u1" data-role="user">
+          <div class="user-body">
+            <div class="user-bubble">
+              <div class="stripe"></div>
+              <div class="me">你</div>
+              <div style="padding-left:4px;">
+                <span class="mention" data-mention="bai-qianbei" style="color:#64748b">@白前辈</span> 听说九幽冰莲快现世了？<span class="mention" data-mention="yao-shi" style="color:#059669">@药师</span> 你怎么看？
+              </div>
+            </div>
+            <div class="user-avatar">我</div>
+          </div>
+          <div class="user-time">14:20</div>
+        </div>
+
+        <!-- AI: 白前辈 (九品之上) -->
+        <div class="ai-row" data-bubble-id="a1" data-role="ai" data-agent="bai-qianbei">
+          <div class="ai-meta">
+            <span class="name name-bai-qianbei">白前辈</span>
+            <span class="realm-tag">九品之上</span>
+            <span class="round">R1</span>
+          </div>
+          <div class="ai-body">
+            <div class="avatar av-bai-qianbei ring">
+              <span>👻</span>
+              <span class="tag">九品上</span>
+            </div>
+            <div class="ai-bubble">
+              <div class="stripe stripe-bai-qianbei"></div>
+              <div class="text">嗯。书航，可。此事……尚需斟酌。九幽冰莲现世，必有异象。善。</div>
+            </div>
+          </div>
+          <div class="ai-time"><span class="dot dot-bai-qianbei"></span>14:21</div>
+        </div>
+
+        <!-- AI: 药师 -->
+        <div class="ai-row" data-bubble-id="a2" data-role="ai" data-agent="yao-shi">
+          <div class="ai-meta">
+            <span class="name name-yao-shi">药师</span>
+            <span class="realm-tag">八品药师</span>
+            <span class="round">R2</span>
+          </div>
+          <div class="ai-body">
+            <div class="avatar av-yao-shi">
+              <span>💊</span>
+              <span class="tag">八品药</span>
+            </div>
+            <div class="ai-bubble">
+              <div class="stripe stripe-yao-shi"></div>
+              <div class="text">且慢。 <span class="mention" data-mention="shu-hang" style="color:#d97706">@宋书航</span> 这事儿老夫早有耳闻。九幽冰莲生于九幽之地，性寒，炼成九品丹需千年候。老夫正好差这一味……切勿急躁。</div>
+            </div>
+          </div>
+          <div class="ai-time"><span class="dot dot-yao-shi"></span>14:21</div>
+        </div>
+
+        <div class="time-divider" data-time-divider="1740000600000">
+          <div class="line"></div>
+          <div class="label">今天 14:30</div>
+          <div class="line"></div>
+        </div>
+
+        <!-- AI: 狂刀三浪 -->
+        <div class="ai-row" data-bubble-id="a3" data-role="ai" data-agent="san-lang">
+          <div class="ai-meta">
+            <span class="name name-san-lang">狂刀三浪</span>
+            <span class="realm-tag">六品刀修</span>
+            <span class="round">R3</span>
+          </div>
+          <div class="ai-body">
+            <div class="avatar av-san-lang">
+              <span>🗡️</span>
+              <span class="tag">六品刀</span>
+            </div>
+            <div class="ai-bubble">
+              <div class="stripe stripe-san-lang"></div>
+              <div class="text">哈！这波我上！九幽之地老子去过！ <span class="mention" data-mention="yao-shi" style="color:#059669">@药师</span> 你别念了！痛快！一刀斩之！</div>
+            </div>
+          </div>
+          <div class="ai-time"><span class="dot dot-san-lang"></span>14:31</div>
+        </div>
+
+        <!-- AI: 宋书航 -->
+        <div class="ai-row" data-bubble-id="a4" data-role="ai" data-agent="shu-hang">
+          <div class="ai-meta">
+            <span class="name name-shu-hang">宋书航</span>
+            <span class="realm-tag">灵尊</span>
+            <span class="round">R4</span>
+          </div>
+          <div class="ai-body">
+            <div class="avatar av-shu-hang">
+              <span>🌟</span>
+              <span class="tag">灵尊</span>
+            </div>
+            <div class="ai-bubble">
+              <div class="stripe stripe-shu-hang"></div>
+              <div class="text">妈耶！在下告辞！这剧情发展不对吧…… <span class="mention" data-mention="bei-he" style="color:#0284c7">@北河散人</span> 您老怎么看啊？我心态有点崩啊……</div>
+            </div>
+          </div>
+          <div class="ai-time"><span class="dot dot-shu-hang"></span>14:32</div>
+        </div>
+
+        <!-- AI: 北河散人 (streaming - cursor visible) -->
+        <div class="ai-row" data-bubble-id="a5" data-role="ai" data-agent="bei-he">
+          <div class="ai-meta">
+            <span class="name name-bei-he">北河散人</span>
+            <span class="realm-tag">八品散修</span>
+            <span class="round">R5</span>
+            <span style="display:inline-flex;align-items:center;gap:2px;color:#b45309;font-size:9px;">
+              <span style="width:4px;height:4px;border-radius:50%;background:#f59e0b;animation:pulseDot 1.4s infinite;"></span>
+              streaming
+            </span>
+          </div>
+          <div class="ai-body">
+            <div class="avatar av-bei-he">
+              <span>🌊</span>
+              <span class="tag">八品散</span>
+            </div>
+            <div class="ai-bubble">
+              <div class="stripe stripe-bei-he"></div>
+              <div class="text" style="color:#0369a1;">老朽观之……此事当徐徐图之。后生莫急。以老朽之见，不若先探九幽入口，<span class="mention" data-mention="san-lang" style="color:#e11d48">@狂刀三浪</span> 你……<span style="display:inline-block;width:2px;height:16px;background:#0369a1;vertical-align:text-bottom;animation:cursor 1s steps(1) infinite;margin-left:2px;"></span></div>
+            </div>
+          </div>
+          <div class="ai-time"><span class="dot dot-bei-he"></span>14:33</div>
+        </div>
+
+        <div id="chat-bottom-anchor"></div>
+      </div>
+    </main>
+
+    <footer class="composer">
+      <div class="inner">
+        <div class="input-row">
+          <textarea data-testid="chat-input" placeholder="发个消息试试 @白前辈 @药师…">@灵蝶尊者 这事儿您怎么看？</textarea>
+          <button class="send-btn" data-testid="send-button">Send
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+          </button>
+        </div>
+        <div class="hint">
+          <span>Enter 发送 · Shift+Enter 换行 · 6 角色依次发言</span>
+          <span>11 字</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <style>
+    @keyframes cursor { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes pulseDot { 0%,100%{opacity:0.4;transform:scale(0.9)} 50%{opacity:1;transform:scale(1.1)} }
+  </style>
+
+  <!-- ============================================================
+       Variant B: Sidebar 打开 (单独层) — 用 display:none 控制
+       ============================================================ -->
+  <div id="variant-b" class="hidden">
+    <div class="overlay"></div>
+    <aside class="sidebar" data-testid="group-sidebar">
+      <div class="head">
+        <div class="brand">
+          <div class="logo-sm">☯</div>
+          <div>
+            <div class="ttl">九洲一号群</div>
+            <div class="sub">修真 6 角色 · 全部在线</div>
+          </div>
+        </div>
+        <button class="close" data-testid="sidebar-close" aria-label="关闭">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="body">
+        <div class="sec">members · 群友</div>
+        <ul>
+          <li>
+            <button data-testid="sidebar-pick-shu-hang" data-role="shu-hang" class="card-shu-hang" style="--card-bg:linear-gradient(135deg, #fffbeb, #fef3c7);">
+              <span class="stripe stripe-shu-hang"></span>
+              <div class="row">
+                <div class="avatar av-shu-hang"><span>🌟</span><span class="tag">灵尊</span></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="name name-shu-hang">宋书航</span>
+                    <span class="online"><span class="dot"></span>在线</span>
+                  </div>
+                  <div class="row2">
+                    <span class="realm-mini">灵尊</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">九洲一号群主角 · 灵尊</span>
+                  </div>
+                  <div class="row3"><span style="letter-spacing:0.1em;">MINIMAX</span><span class="hint">@ 提及</span></div>
+                </div>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button data-testid="sidebar-pick-yao-shi" data-role="yao-shi" style="--card-bg:linear-gradient(135deg, #ecfdf5, #d1fae5);">
+              <span class="stripe stripe-yao-shi"></span>
+              <div class="row">
+                <div class="avatar av-yao-shi"><span>💊</span><span class="tag">八品药</span></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="name name-yao-shi">药师</span>
+                    <span class="online"><span class="dot"></span>在线</span>
+                  </div>
+                  <div class="row2">
+                    <span class="realm-mini">八品药师</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">丹道宗师 · 八品药师</span>
+                  </div>
+                  <div class="row3"><span style="letter-spacing:0.1em;">MINIMAX</span><span class="hint">@ 提及</span></div>
+                </div>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button data-testid="sidebar-pick-san-lang" data-role="san-lang" style="--card-bg:linear-gradient(135deg, #fff1f2, #ffe4e6);">
+              <span class="stripe stripe-san-lang"></span>
+              <div class="row">
+                <div class="avatar av-san-lang"><span>🗡️</span><span class="tag">六品刀</span></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="name name-san-lang">狂刀三浪</span>
+                    <span class="online"><span class="dot"></span>在线</span>
+                  </div>
+                  <div class="row2">
+                    <span class="realm-mini">六品刀修</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">刀修狂人 · 六品刀修</span>
+                  </div>
+                  <div class="row3"><span style="letter-spacing:0.1em;">MINIMAX</span><span class="hint">@ 提及</span></div>
+                </div>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button data-testid="sidebar-pick-bei-he" data-role="bei-he" style="--card-bg:linear-gradient(135deg, #f0f9ff, #e0f2fe);">
+              <span class="stripe stripe-bei-he"></span>
+              <div class="row">
+                <div class="avatar av-bei-he"><span>🌊</span><span class="tag">八品散</span></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="name name-bei-he">北河散人</span>
+                    <span class="online"><span class="dot"></span>在线</span>
+                  </div>
+                  <div class="row2">
+                    <span class="realm-mini">八品散修</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">元老前辈 · 八品散修</span>
+                  </div>
+                  <div class="row3"><span style="letter-spacing:0.1em;">AGNES</span><span class="hint">@ 提及</span></div>
+                </div>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button data-testid="sidebar-pick-bai-qianbei" data-role="bai-qianbei" style="--card-bg:linear-gradient(135deg, #f8fafc, #f1f5f9);">
+              <span class="stripe stripe-bai-qianbei"></span>
+              <div class="row">
+                <div class="avatar av-bai-qianbei"><span>👻</span><span class="tag">九品上</span></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="name name-bai-qianbei">白前辈</span>
+                    <span class="online"><span class="dot"></span>在线</span>
+                  </div>
+                  <div class="row2">
+                    <span class="realm-mini">九品之上</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">辈分最高 · 九品之上</span>
+                  </div>
+                  <div class="row3"><span style="letter-spacing:0.1em;">AGNES</span><span class="hint">@ 提及</span></div>
+                </div>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button data-testid="sidebar-pick-ling-die" data-role="ling-die" style="--card-bg:linear-gradient(135deg, #fdf4ff, #fae8ff);">
+              <span class="stripe stripe-ling-die"></span>
+              <div class="row">
+                <div class="avatar av-ling-die"><span>🦋</span><span class="tag">八品尊</span></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="name name-ling-die">灵蝶尊者</span>
+                    <span class="online"><span class="dot"></span>在线</span>
+                  </div>
+                  <div class="row2">
+                    <span class="realm-mini">八品尊者</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">灵蝶岛主 · 八品尊者</span>
+                  </div>
+                  <div class="row3"><span style="letter-spacing:0.1em;">MINIMAX</span><span class="hint">@ 提及</span></div>
+                </div>
+              </div>
+            </button>
+          </li>
+        </ul>
+        <div class="foot">
+          <div class="ttl">用法</div>
+          <ul>
+            <li>点击卡片 → 输入框自动插入 @角色名</li>
+            <li>消息里 @白前辈 / @北河 → supervisor 优先召唤</li>
+            <li>输入 Enter 发送 · Shift+Enter 换行</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+</body>
+</html>

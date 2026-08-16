@@ -1,0 +1,265 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  /* ===== Stage 8 UI 美化 — 「深墨金」九洲一号群主题 CSS 变量 ===== */
+  /* 配色来源：fallback 自定 palette（research 文档未落地时启用） */
+  /*   #1F1F1F 深墨   — 主背景 */
+  /*   #C7A969 主金   — 主色 / 装饰 / 强调 */
+  /*   #E8E1D4 米白   — 文字色 */
+  /*   #8B3A3A 朱砂   — 警告 / 重要 / 错误 */
+  /*   #5C7367 远山青 — 次要 / 成功 / 辅助 */
+  --color-bg: #1F1F1F;
+  --color-bg-2: #2A2620;
+  --color-panel: #2A2620;
+  --color-panel-2: #342F28;
+  --color-border: rgba(199, 169, 105, 0.20);
+  --color-border-soft: rgba(199, 169, 105, 0.10);
+  --color-accent: #C7A969;
+  --color-accent-2: #D4B574;
+  --color-accent-warn: #8B3A3A;
+  --color-accent-aux: #5C7367;
+  --color-text: #E8E1D4;
+  --color-text-muted: #A8A095;
+  --color-text-dim: #6B655A;
+
+  /* 6 九洲一号群角色色 — 维持辨识度（每角色独特色相） */
+  --color-shu-hang: #C7A969;   /* 灵尊 琥珀金 */
+  --color-yao-shi: #5C7367;    /* 药师 远山青 */
+  --color-san-lang: #8B3A3A;   /* 三浪 朱砂 */
+  --color-bei-he: #6A8AAD;     /* 北河 玄青 */
+  --color-bai-qianbei: #B8B0A2; /* 白前辈 霜灰 */
+  --color-ling-die: #B07AB0;   /* 灵蝶 蝶粉紫 */
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  /* Stage 8：深墨金主题 — 深墨背景 + 金线径向光晕 + 淡墨纹理 */
+  background:
+    /* 金光晕（顶部正中） */
+    radial-gradient(at 50% 0%, rgba(199, 169, 105, 0.10) 0px, transparent 40%),
+    /* 朱砂光晕（左下） */
+    radial-gradient(at 10% 90%, rgba(139, 58, 58, 0.05) 0px, transparent 45%),
+    /* 远山青光晕（右下） */
+    radial-gradient(at 90% 80%, rgba(92, 115, 103, 0.05) 0px, transparent 45%),
+    /* 深墨基底 */
+    linear-gradient(180deg, #1F1F1F 0%, #1A1814 50%, #1F1F1F 100%);
+  background-attachment: fixed;
+  color: var(--color-text);
+  font-family: "Noto Serif SC", "Songti SC", "STSong", "Source Han Serif SC",
+    "Times New Roman", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  position: relative;
+  letter-spacing: 0.01em;
+}
+
+/* 中式风格纹理：宣纸纤维 + 远山横纹 + 墨点 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    /* 横纹（远山） */
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px,
+      transparent 12px,
+      rgba(199, 169, 105, 0.018) 12px,
+      rgba(199, 169, 105, 0.018) 13px
+    ),
+    /* 竖纹（宣纸纤维） */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 18px,
+      rgba(199, 169, 105, 0.012) 18px,
+      rgba(199, 169, 105, 0.012) 19px
+    ),
+    /* SVG 噪声（淡墨点） */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.78  0 0 0 0 0.66  0 0 0 0 0.41  0 0 0 0.035 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: auto, auto, 200px 200px;
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 自定义滚动条 — 金线样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(199, 169, 105, 0.16);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(199, 169, 105, 0.32);
+}
+
+/* ===== Animations (also defined in tailwind.config.js) ===== */
+@keyframes cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, -30px) scale(1.05); }
+  66% { transform: translate(-15px, 20px) scale(0.95); }
+}
+
+.animate-cursor {
+  animation: cursor 1s steps(1) infinite;
+}
+.animate-pulseDot {
+  animation: pulseDot 1.4s ease-in-out infinite;
+}
+.animate-blob {
+  animation: blob 12s ease-in-out infinite;
+}
+
+/* ===== Stage 8: 九洲一号群「深墨金」utility classes ===== */
+
+/* @mention 高亮 — 金色底 + 朱砂字 */
+.mention-highlight {
+  display: inline;
+  border-radius: 0.375rem;
+  padding: 0 0.35rem;
+  font-weight: 700;
+  background-image: linear-gradient(135deg, rgba(199, 169, 105, 0.22) 0%, rgba(139, 58, 58, 0.18) 100%);
+  box-shadow: 0 0 0 1px rgba(199, 169, 105, 0.35) inset;
+  color: var(--color-accent-2);
+  white-space: nowrap;
+}
+
+/* 卡片悬浮 */
+.card-hover {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -8px rgba(199, 169, 105, 0.20);
+}
+
+/* 金线分隔 */
+.ink-divider {
+  background-image: linear-gradient(90deg, transparent, rgba(199, 169, 105, 0.30), transparent);
+  height: 1px;
+}
+
+/* 仙侠标题字体（书法风） */
+.font-xiuzhen-title {
+  font-family: "ZCOOL XiaoWei", "Ma Shan Zheng", "Noto Serif SC", "STKaiti", "KaiTi", serif;
+  letter-spacing: 0.04em;
+}
+
+/* 仙侠正文字体（衬线） */
+.font-xiuzhen-body {
+  font-family: "Noto Serif SC", "Songti SC", "STSong", "Source Han Serif SC", serif;
+}
+
+/* 金色装饰边框（金线 / 框线 / 按钮边） */
+.gold-border {
+  border: 1px solid rgba(199, 169, 105, 0.25);
+}
+.gold-border-strong {
+  border: 1px solid rgba(199, 169, 105, 0.5);
+}
+
+/* 金光流（用于主标题 / logo 装饰） */
+.gold-text {
+  background: linear-gradient(90deg, #C7A969 0%, #D4B574 50%, #C7A969 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: goldShimmer 8s linear infinite;
+}
+@keyframes goldShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* 消息入场：无 box-shadow，避免 NPC 发言「透明浮窗高亮」 */
+@keyframes msgIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-msgIn {
+  animation: msgIn 0.22s ease-out both;
+}
+
+/* ===== Stage 10: 消息区深墨金静底（固定层，不随消息滚动） ===== */
+.chat-wallpaper {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  background-color: #1a1814;
+  background-image:
+    radial-gradient(ellipse 80% 45% at 50% 15%, rgba(199, 169, 105, 0.12) 0%, transparent 55%),
+    linear-gradient(165deg, #2a2620 0%, #1f1f1f 45%, #1a1814 100%);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+@keyframes worldFogDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-1.5%, 0.5%, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+}
+
+.world-stage-fog-drift {
+  animation: worldFogDrift 48s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-stage-fog-drift {
+    animation: none;
+  }
+}
+
+/* Electron frameless title bar drag regions */
+.desktop-titlebar-drag {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+.desktop-titlebar-no-drag {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}

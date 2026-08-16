@@ -1,0 +1,14 @@
+{
+  "sceneId": "jiu-zhou-pavilion",
+  "version": "1.0.0",
+  "width": 1600,
+  "height": 900,
+  "horizonY": 0.4,
+  "layers": [
+    {
+      "kind": "plate",
+      "src": "plate.png"
+    }
+  ],
+  "notes": "L0 plate-only authoring path (design §8.0). Fog/mid deferred; CSS mask provides depth."
+}
