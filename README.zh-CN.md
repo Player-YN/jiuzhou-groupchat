@@ -122,7 +122,7 @@ start-electron.bat
 1. 启动或复用 FastAPI `:8000` 与 Next `:3000`（清孤儿端口；lifecycle 写入 `frontend/public/runtime-config.js`）。
 2. 用 `--no-spawn` 打开 Electron。关窗执行 lifecycle **stop**，释放两个端口。
 
-不要把单独的 `uvicorn` / `next dev` / Tauri `desktop-launcher` 当成产品入口。
+不要把单独的 `uvicorn` / `next dev` 当成产品入口。
 
 密钥放在 **已被 gitignore** 的 `.env`（仓库根或 `backend/.env`）。管理后台 ⚙（`POST /api/admin/config`）会把供应商和 key 写进该文件——**禁止提交**。没有 key 则走 mock。
 

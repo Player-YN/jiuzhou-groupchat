@@ -122,7 +122,7 @@ Two-phase launch (`scripts/start-electron.ps1` + `scripts/groupchat-lifecycle.ps
 1. Start / reuse FastAPI `:8000` and Next `:3000` (orphan ports cleared; `frontend/public/runtime-config.js` written by lifecycle).
 2. Open Electron with `--no-spawn`. Closing the window runs lifecycle **stop** and releases both ports.
 
-Do not treat `uvicorn` / `next dev` / Tauri `desktop-launcher` as the product entry.
+Do not treat standalone `uvicorn` / `next dev` as the product entry.
 
 Keys live in a **gitignored** `.env` (repo root or `backend/.env`). Admin ⚙ (`POST /api/admin/config`) writes provider + key into that file — **never commit it**. No key → mock provider.
 
