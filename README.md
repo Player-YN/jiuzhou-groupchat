@@ -1,25 +1,93 @@
-# Jiuzhou Group Chat · 九州一号群
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%" alt="Jiuzhou Group Chat: one human and six fixed novel characters. Deterministic rules pick 0–2 speakers; silence is allowed.">
+</p>
 
-[中文 README](README.zh-CN.md) · [GitHub](https://github.com/Player-YN/jiuzhou-groupchat)
+<p align="center">
+  <a href="README.zh-CN.md">中文 README</a>
+  ·
+  <a href="https://github.com/Player-YN/jiuzhou-groupchat">GitHub</a>
+  ·
+  <a href="LICENSE">MIT</a>
+</p>
 
-**A persistent social simulation:** one human lives in a group chat with six fixed novel characters. They speak — or stay silent — because of scored motive, not because a wrapper asked six chatbots to take turns.
+**A persistent social simulation** for people who want a group that can stay quiet. One human lives with six fixed novel characters. After each event, **`BehaviorEngine.decide()`** — not an LLM — selects **zero, one, or two** speakers.
 
-> Not a multi-agent brainstormer. Not a meeting-minutes bot. Silence is a first-class outcome.
+**This is not** a six-chatbot round-robin, a multi-agent brainstormer, a meeting-minutes bot, or a voice/video client. Profile “voice / video” buttons are UI stubs. The LangGraph supervisor in `backend/app/graph.py` is **legacy**, not the live group path.
 
-![Group chat](docs/screenshots/stage8/B-beautify-main-page.png)
+## Run
 
-## Why this is not a chatbot wrapper
+**Official path — this only** (Windows desktop):
 
-A typical “six NPCs in a room” demo lets an LLM pick who talks, or round-robins everyone. This project separates **semantics** from **policy**:
+```bat
+start-electron.bat
+```
 
-| Layer | Who | What it is allowed to do |
+Double-click it. Lifecycle starts FastAPI `:8000` and Next.js `:3000`, then opens Electron. Closing the window stops both processes. Log: `desktop-electron/launch.log`.
+
+Optional flags (same file): `start-electron.bat debug` · `start-electron.bat rebuild`.
+
+Do **not** treat standalone `uvicorn`, `next dev`, or `docker compose` as the product entry.
+
+No API key → mock provider. Keys go in a **gitignored** `.env` (repo root or `backend/.env`). Admin ⚙ writes that file — never commit it.
+
+<p align="center">
+  <img src="./docs/screenshots/stage8/B-beautify-chat-bubble.png" width="100%" alt="Live Electron group chat: the user @mentions 白前辈 and only that character starts streaming — not a six-bot round-robin.">
+</p>
+
+An `@mention` selects its target without waiting on an LLM assessor. Ordinary group events may produce **0 / 1 / 2** replies. Idle ticks select **at most one**. Autonomous chains stop at depth 3.
+
+## What it is not
+
+| Surface | Live default | Honesty |
+| --- | --- | --- |
+| Voice / video | Stub buttons | Toast only. **No** WebRTC / signaling. |
+| Speaker picker | `BehaviorEngine.decide()` | LLM/heuristics extract 0–3 features. They **never** name a speaker. |
+| LangGraph cycle | Not online | Live path is event-driven `stream_group_chat`. |
+| `NpcLoop` × 6 | Compatibility only | Must not become the default proactive path. |
+| World Stage / weather | Off, not mounted | Modules exist; `ChatRoom` / `layout` / `page` do not import them. Rain/snow is not a product default. |
+| Wallpaper | Static CSS `.chat-wallpaper` | Deep ink / gold. `chat-ink-xianxia.png` is on disk, **not referenced**. |
+| Multi-human group | Out of scope | One human + six NPCs. |
+| Postgres / packaged installer | Not shipped | SQLite only. No offline Electron installer. |
+
+## How speakers are chosen
+
+Semantics and policy are split on purpose:
+
+| Layer | Who | Allowed to do |
 | --- | --- | --- |
 | Feature extract | Heuristic rules (default) or one batched LLM call | Output 0–3 scores for six roles. **Never names a speaker.** |
 | Policy | Pure `BehaviorEngine.decide()` | Hard gates, weighted score, threshold, 0–2 arbitration, silence. |
-| Memory of the decision | SQLite `DecisionLogStore` | Append-once. Same `event_id` + different input → collision. |
+| Decision memory | SQLite `DecisionLogStore` | Append-once. Same `event_id` + different input → collision. |
 | Replay | Same engine, logged inputs only | Re-run **rules**, not the LLM. Field-equal or fail. |
 
-Explicit `@mention` and DM never wait on an LLM assessor. Ordinary group events may select **zero, one, or two** speakers. Idle ticks select **at most one**. Autonomous chains stop at depth 3.
+```text
+semantic = 0.24·relevance + 0.20·social_obligation
+         + 0.14·relationship_motivation + 0.14·continuity
+         + 0.10·persona_impulse + 0.18·novelty_potential
+
+final = clamp(semantic + deterministic adjustments)
+```
+
+Live defaults (env-tunable; **not** older PRD 0.60 / 0.12 numbers):
+
+| Knob | Default | Role |
+| --- | --- | --- |
+| `BEHAVIOR_ASSESS_MODE` | `heuristic` | Fast rule features. `@` **never** uses LLM assess. `llm` restores the six-role feature call. |
+| `BEHAVIOR_RESPONSE_THRESHOLD` | `0.40` | Below this → eligible but not selected. |
+| `BEHAVIOR_SECOND_MAX_GAP` | `0.28` | Second speaker only if close, `novelty_potential ≥ 1`, distinct `contribution_key`. |
+| `BEHAVIOR_IDLE_MIN/MAX_SEC` | `20` / `55` | Coordinator idle stimulus. |
+| `BEHAVIOR_COOLDOWN_SEC` | `25` | Ordinary proactive cooldown (`@` can override). |
+| Hard gates | mute / sleep / busy / already handled / daily budget | Beat `@`. Cooldown does not. |
+
+`proposed_action=react` is recorded and **not** promoted to a full reply (no lightweight reaction protocol yet).
+
+Audit:
+
+- `GET /api/behavior/decisions/{event_id}`
+- `GET /api/behavior/decisions?session_id=…`
+- `POST /api/behavior/decisions/{event_id}/replay` — re-run `decide()` only
+
+Inject a non-user stimulus: `POST /api/cron/trigger` with `{"service":"behavior","behavior_event_type":"idle_tick","text":"…"}`.
 
 ## Cast
 
@@ -32,7 +100,7 @@ Explicit `@mention` and DM never wait on an LLM assessor. Ordinary group events 
 | `bai-qianbei` | 白前辈 | Cryptic senior · Agnes |
 | `ling-die` | 灵蝶尊者 | Elegant, sharp · MiniMax |
 
-Sidebar **ContactList** opens **DM**. A group-bubble **avatar** opens the **profile** card. Profile “voice / video” buttons are **UI stubs** (`暂未开放`) — there is **no A/V signaling**.
+Sidebar **ContactList** opens **DM**. A group-bubble **avatar** opens the **profile** card.
 
 ## Architecture
 
@@ -59,40 +127,16 @@ Sidebar **ContactList** opens **DM**. A group-bubble **avatar** opens the **prof
    agents)              / OpenAI / …      (append-once)
 ```
 
-The LangGraph supervisor / 6–8-round cycle in `backend/app/graph.py` is **legacy compatibility**. The live group path is event-driven `stream_group_chat`.
+Proactive speech is a process-wide **`BehaviorCoordinator` singleton**. When `GC_LOOPS_ENABLED` is true (default), the old random `XiuzhenCronService` stays **dormant**. Daily per-role budget: `GC_DAILY_BUDGET` (coordinator default 60).
 
-Proactive speech is a process-wide **`BehaviorCoordinator` singleton** (`get_behavior_coordinator()`). When `GC_LOOPS_ENABLED` is true (default), the old random `XiuzhenCronService` stays **dormant** and the six `NpcLoop`s are **not** the online policy. Idle interval: 20–55 s. Daily per-role budget: `GC_DAILY_BUDGET` (default 60).
+Two-phase launch (`scripts/start-electron.ps1` + `scripts/groupchat-lifecycle.ps1`): start or reuse the two ports (orphans cleared; `frontend/public/runtime-config.js` written), then open the window with `--no-spawn`.
 
-## Hybrid behavior engine
-
-```text
-semantic = 0.24·relevance + 0.20·social_obligation
-         + 0.14·relationship_motivation + 0.14·continuity
-         + 0.10·persona_impulse + 0.18·novelty_potential
-
-final = clamp(semantic + deterministic adjustments)
-```
-
-Live defaults (env-tunable, **not** the older PRD 0.60 / 0.12 numbers):
-
-| Knob | Default | Role |
-| --- | --- | --- |
-| `BEHAVIOR_ASSESS_MODE` | `heuristic` | Fast rule features. `@` **never** uses LLM assess. `llm` restores the six-role feature call. |
-| `BEHAVIOR_RESPONSE_THRESHOLD` | `0.40` | Below this → eligible but not selected. |
-| `BEHAVIOR_SECOND_MAX_GAP` | `0.28` | Second speaker only if close, `novelty_potential ≥ 1`, distinct `contribution_key`. |
-| `BEHAVIOR_IDLE_MIN/MAX_SEC` | `20` / `55` | Coordinator idle stimulus. |
-| `BEHAVIOR_COOLDOWN_SEC` | `25` | Ordinary proactive cooldown (`@` can override). |
-| Hard gates | mute / sleep / busy / already handled / daily budget | Beat `@`. Cooldown does not. |
-
-`proposed_action=react` is recorded and **not** promoted to a full reply (no lightweight reaction protocol yet).
-
-**Audit (replayable):**
-
-- `GET /api/behavior/decisions/{event_id}`
-- `GET /api/behavior/decisions?session_id=…`
-- `POST /api/behavior/decisions/{event_id}/replay` — re-run `decide()` only
-
-Inject a non-user stimulus: `POST /api/cron/trigger` with `{"service":"behavior","behavior_event_type":"idle_tick","text":"…"}`.
+| Variable | Meaning |
+| --- | --- |
+| `USE_MOCK_LLM` | Force mock; beats Letta and real providers. |
+| `USE_LETTA` | Default true. Mock still wins. Letta down → per-role fallback. |
+| `GC_LOOPS_ENABLED` | Default true → start `BehaviorCoordinator`. `false` → legacy cron. |
+| `MINIMAX_API_KEY` / `AGNES_API_KEY` / … | Per-provider keys. |
 
 ## Stack
 
@@ -107,32 +151,6 @@ Inject a non-user stimulus: `POST /api/cron/trigger` with `{"service":"behavior"
 
 Context: last 20 messages kept; older turns optionally summarized (MiniMax). Generation: 90 s wall clock, 600-char hard cap.
 
-## Run
-
-**Real entry — this only:**
-
-```bat
-start-electron.bat
-```
-
-Optional: `start-electron.bat debug` (visible host + `desktop-electron/launch.log`) · `start-electron.bat rebuild` (frontend rebuild, then start).
-
-Two-phase launch (`scripts/start-electron.ps1` + `scripts/groupchat-lifecycle.ps1`):
-
-1. Start / reuse FastAPI `:8000` and Next `:3000` (orphan ports cleared; `frontend/public/runtime-config.js` written by lifecycle).
-2. Open Electron with `--no-spawn`. Closing the window runs lifecycle **stop** and releases both ports.
-
-Do not treat standalone `uvicorn` / `next dev` as the product entry.
-
-Keys live in a **gitignored** `.env` (repo root or `backend/.env`). Admin ⚙ (`POST /api/admin/config`) writes provider + key into that file — **never commit it**. No key → mock provider.
-
-| Variable | Meaning |
-| --- | --- |
-| `USE_MOCK_LLM` | Force mock; beats Letta and real providers. |
-| `USE_LETTA` | Default true. Mock still wins. Letta down → per-role fallback. |
-| `GC_LOOPS_ENABLED` | Default true → start `BehaviorCoordinator`. `false` → legacy cron. |
-| `MINIMAX_API_KEY` / `AGNES_API_KEY` / … | Per-provider keys. |
-
 ## Tests
 
 ```powershell
@@ -144,21 +162,9 @@ cd ..\frontend
 npx tsc --noEmit
 ```
 
-Covered in those files: natural silence, 0–2 cap, `@` floor without LLM, mute vs `@`, distinct `contribution_key`, cooldown / budget, depth-3 stop, append-once log, deterministic replay, coordinator singleton (one idle → one batch → ≤1 speaker), duplicate `event_id`.
+Those files cover: natural silence, 0–2 cap, `@` floor without LLM, mute vs `@`, distinct `contribution_key`, cooldown / budget, depth-3 stop, append-once log, deterministic replay, coordinator singleton (one idle → one batch → ≤1 speaker), duplicate `event_id`.
 
 A 24-hour soak runner exists (`backend/tests/soak_mvp_candidate.py`). **It is not a passed product gate.** Human scenario acceptance (`docs/product/05_MVP_SCENARIO_ACCEPTANCE.md`) is also **pending**.
-
-## Honest feature flags
-
-| Surface | Live default | Notes |
-| --- | --- | --- |
-| Wallpaper | Static CSS `.chat-wallpaper` (deep ink / gold) | `frontend/public/backgrounds/chat-ink-xianxia.png` is on disk, **not referenced**. |
-| World Stage / weather | **Off, and not mounted** | Modules exist under `frontend/lib/world` + `frontend/components/world`. Flag: `NEXT_PUBLIC_WORLD_STAGE=1`, `?worldStage=1`, `localStorage xz-world-stage`. `ChatRoom` / `layout` / `page` do **not** import `AppAtmosphere` / `WorldStage` / the debug wheel. Admin ⚙ has **no** “动态舞台” toggle. Rain/snow is not a product default. |
-| Voice / video | Stub buttons | Toast only. No WebRTC / signaling. |
-| LangGraph cycle | Not online | `stream_group_chat` uses the engine. |
-| `NpcLoop` × 6 | Compatibility only | Must not become the default proactive path. |
-| Postgres | Not integrated | SQLite only. |
-| Multi-human group | Out of scope | One human + six NPCs. |
 
 ## Status
 
@@ -174,3 +180,7 @@ Product source of truth: [`docs/product/04_MVP_CANDIDATE_PRD.md`](docs/product/0
 - [`docs/README.md`](docs/README.md) — doc map
 - [`docs/decisions/0007-npc-self-driven.md`](docs/decisions/0007-npc-self-driven.md) — proactive-speech ADR
 - [`docs/screenshots/`](docs/screenshots/) — visual evidence
+
+## License
+
+[MIT](LICENSE) · Copyright (c) 2026 Player-YN

@@ -1,16 +1,57 @@
-# 九州一号群 · Jiuzhou Group Chat
+<p align="center">
+  <img src="./assets/readme/hero.zh.svg" width="100%" alt="九州一号群：一个真人与六个固定小说角色。确定性规则选出 0–2 个发言者，也可以全员沉默。">
+</p>
 
-[English README](README.md) · [GitHub](https://github.com/Player-YN/jiuzhou-groupchat)
+<p align="center">
+  <a href="README.md">English README</a>
+  ·
+  <a href="https://github.com/Player-YN/jiuzhou-groupchat">GitHub</a>
+  ·
+  <a href="LICENSE">MIT</a>
+</p>
 
-**持续群聊社交模拟：** 一个真人与六个固定小说角色长期共处同一群。角色开口或沉默，来自可评分的动机，而不是「把六个聊天机器人轮流叫起来」。
+**持续群聊社交模拟**，给想要「群也可以安静」的人。一个真人与六个固定小说角色长期共处同一群。每次事件之后，由 **`BehaviorEngine.decide()`**——不是 LLM——选出 **零、一或两个** 发言者。
 
-> 不是多 Agent 头脑风暴，也不是自动会议纪要。沉默是一等公民结果。
+**这不是** 六个聊天机器人轮流叫号，不是多 Agent 头脑风暴，不是自动会议纪要，也不是音视频客户端。资料页「语音 / 视频」是 UI 占位。`backend/app/graph.py` 里的 LangGraph Supervisor **是遗留兼容**，不是线上群聊路径。
 
-![群聊主界面](docs/screenshots/stage8/B-beautify-main-page.png)
+## 运行
 
-## 为什么不是套壳聊天机器人
+**真实入口——只有这一条**（Windows 桌面）：
 
-常见「六人同房」演示要么让 LLM 点名发言，要么全员轮询。本项目把 **语义** 和 **策略** 拆开：
+```bat
+start-electron.bat
+```
+
+双击即可。lifecycle 拉起 FastAPI `:8000` 与 Next.js `:3000`，再打开 Electron。关窗即停两端进程。日志：`desktop-electron/launch.log`。
+
+可选参数（仍是同一文件）：`start-electron.bat debug` · `start-electron.bat rebuild`。
+
+不要把单独的 `uvicorn`、`next dev` 或 `docker compose` 当成产品入口。
+
+没有 API key → mock。密钥放在 **已被 gitignore** 的 `.env`（仓库根或 `backend/.env`）。管理后台 ⚙ 会写这个文件——**禁止提交**。
+
+<p align="center">
+  <img src="./docs/screenshots/stage8/B-beautify-chat-bubble.png" width="100%" alt="Electron 群聊实拍：用户 @白前辈 后只有该角色开始推流，不是六人轮询。">
+</p>
+
+明确 `@` 从不等待 LLM 评估。普通群事件可选 **0 / 1 / 2** 人；空闲 tick **最多 1 人**；自主连锁最多 3 跳。
+
+## 这不是什么
+
+| 表面 | 线上默认 | 说明 |
+| --- | --- | --- |
+| 语音 / 视频 | 占位按钮 | 只有 toast。**没有** WebRTC / 信令。 |
+| 发言裁决 | `BehaviorEngine.decide()` | LLM/启发式只提取 0–3 分项，**不得点出发言者**。 |
+| LangGraph 循环 | 未上线 | 线上路径是事件驱动的 `stream_group_chat`。 |
+| `NpcLoop` × 6 | 仅兼容 | 不得重新成为默认主动路径。 |
+| 动态舞台 / 天气 | 关，且未挂载 | 模块在仓库里；`ChatRoom` / `layout` / `page` **没有** import。雨雪不是产品默认。 |
+| 壁纸 | 静态 CSS `.chat-wallpaper` | 深墨金。`chat-ink-xianxia.png` 在磁盘上，**代码未引用**。 |
+| 多真人群聊 | 范围外 | 一人 + 六 NPC。 |
+| Postgres / 离线安装包 | 未交付 | 只有 SQLite。没有打包好的 Electron 安装包。 |
+
+## 谁开口，怎么定
+
+语义和策略刻意拆开：
 
 | 层 | 谁 | 允许做什么 |
 | --- | --- | --- |
@@ -19,7 +60,34 @@
 | 决策记忆 | SQLite `DecisionLogStore` | 只追加一次。同 `event_id` + 不同输入 → 冲突。 |
 | 回放 | 同一引擎 + 日志里的原始输入 | 只重跑 **规则**，不重跑 LLM。字段必须一致。 |
 
-明确 `@` 与私信 **从不** 等待 LLM 评估。普通群事件可选 **0 / 1 / 2** 人；空闲 tick **最多 1 人**；自主连锁最多 3 跳。
+```text
+semantic = 0.24·relevance + 0.20·social_obligation
+         + 0.14·relationship_motivation + 0.14·continuity
+         + 0.10·persona_impulse + 0.18·novelty_potential
+
+final = clamp(semantic + 确定性加减分)
+```
+
+当前默认（可用环境变量调，**不是** 旧 PRD 里的 0.60 / 0.12）：
+
+| 旋钮 | 默认 | 作用 |
+| --- | --- | --- |
+| `BEHAVIOR_ASSESS_MODE` | `heuristic` | 规则提特征。`@` **永不** 走 LLM 评估。`llm` 恢复六角色特征调用。 |
+| `BEHAVIOR_RESPONSE_THRESHOLD` | `0.40` | 低于此值：合格但不入选。 |
+| `BEHAVIOR_SECOND_MAX_GAP` | `0.28` | 第二人须分差够近、`novelty_potential ≥ 1`、且 `contribution_key` 不同。 |
+| `BEHAVIOR_IDLE_MIN/MAX_SEC` | `20` / `55` | 协调器空闲刺激。 |
+| `BEHAVIOR_COOLDOWN_SEC` | `25` | 普通主动冷却（`@` 可覆盖）。 |
+| 硬门 | 静音 / 睡眠 / 忙碌 / 已处理 / 日预算 | 压过 `@`。冷却不压过 `@`。 |
+
+`proposed_action=react` 只记意图，**不会** 升级成完整发言（尚无轻量 reaction 协议）。
+
+可回放审计：
+
+- `GET /api/behavior/decisions/{event_id}`
+- `GET /api/behavior/decisions?session_id=…`
+- `POST /api/behavior/decisions/{event_id}/replay` — 只重跑 `decide()`
+
+注入非用户事件：`POST /api/cron/trigger`，body 为 `{"service":"behavior","behavior_event_type":"idle_tick","text":"…"}`。
 
 ## 角色
 
@@ -32,7 +100,7 @@
 | `bai-qianbei` | 白前辈 | 神秘寡言 · Agnes |
 | `ling-die` | 灵蝶尊者 | 优雅锐利 · MiniMax |
 
-左侧 **ContactList** 点角色 → **私聊**。群气泡 **头像** → **资料卡**。资料页「语音 / 视频」是 **UI 占位**（toast「暂未开放」），**没有音视频信令**。
+左侧 **ContactList** 点角色 → **私聊**。群气泡 **头像** → **资料卡**。
 
 ## 架构
 
@@ -59,40 +127,16 @@
                          / OpenAI / …      （只追加）
 ```
 
-`backend/app/graph.py` 里的 LangGraph Supervisor / 6–8 轮循环是 **兼容遗留**。线上群聊路径是事件驱动的 `stream_group_chat`。
+主动发言由进程级 **`BehaviorCoordinator` 单例** 负责。`GC_LOOPS_ENABLED` 为 true（默认）时，旧的随机 `XiuzhenCronService` **休眠**。每角色每日预算 `GC_DAILY_BUDGET`（协调器默认 60）。
 
-主动发言由进程级 **`BehaviorCoordinator` 单例**（`get_behavior_coordinator()`）负责。`GC_LOOPS_ENABLED` 为 true（默认）时，旧的随机 `XiuzhenCronService` **休眠**，六个 `NpcLoop` **不是** 线上策略。空闲间隔 20–55 秒；每角色每日预算 `GC_DAILY_BUDGET`（默认 60）。
+两阶段启动（`scripts/start-electron.ps1` + `scripts/groupchat-lifecycle.ps1`）：启动或复用两个端口（清孤儿；lifecycle 写入 `frontend/public/runtime-config.js`），再用 `--no-spawn` 开窗。
 
-## 混合行为引擎
-
-```text
-semantic = 0.24·relevance + 0.20·social_obligation
-         + 0.14·relationship_motivation + 0.14·continuity
-         + 0.10·persona_impulse + 0.18·novelty_potential
-
-final = clamp(semantic + 确定性加减分)
-```
-
-当前默认（可用环境变量调，**不是** 旧 PRD 里的 0.60 / 0.12）：
-
-| 旋钮 | 默认 | 作用 |
-| --- | --- | --- |
-| `BEHAVIOR_ASSESS_MODE` | `heuristic` | 规则提特征。`@` **永不** 走 LLM 评估。`llm` 恢复六角色特征调用。 |
-| `BEHAVIOR_RESPONSE_THRESHOLD` | `0.40` | 低于此值：合格但不入选。 |
-| `BEHAVIOR_SECOND_MAX_GAP` | `0.28` | 第二人须分差够近、`novelty_potential ≥ 1`、且 `contribution_key` 不同。 |
-| `BEHAVIOR_IDLE_MIN/MAX_SEC` | `20` / `55` | 协调器空闲刺激。 |
-| `BEHAVIOR_COOLDOWN_SEC` | `25` | 普通主动冷却（`@` 可覆盖）。 |
-| 硬门 | 静音 / 睡眠 / 忙碌 / 已处理 / 日预算 | 压过 `@`。冷却不压过 `@`。 |
-
-`proposed_action=react` 只记意图，**不会** 升级成完整发言（尚无轻量 reaction 协议）。
-
-**可回放审计：**
-
-- `GET /api/behavior/decisions/{event_id}`
-- `GET /api/behavior/decisions?session_id=…`
-- `POST /api/behavior/decisions/{event_id}/replay` — 只重跑 `decide()`
-
-注入非用户事件：`POST /api/cron/trigger`，body 为 `{"service":"behavior","behavior_event_type":"idle_tick","text":"…"}`。
+| 变量 | 含义 |
+| --- | --- |
+| `USE_MOCK_LLM` | 强制 mock，压过 Letta 与真实供应商。 |
+| `USE_LETTA` | 默认 true。mock 仍优先。Letta 挂了回退分角色供应商。 |
+| `GC_LOOPS_ENABLED` | 默认 true → 启 `BehaviorCoordinator`。`false` → 旧 cron。 |
+| `MINIMAX_API_KEY` / `AGNES_API_KEY` / … | 各供应商密钥。 |
 
 ## 技术栈
 
@@ -106,32 +150,6 @@ final = clamp(semantic + 确定性加减分)
 | LLM | MiniMax / Agnes（分角色）· OpenAI / DeepSeek / Anthropic / Ollama · `USE_MOCK_LLM` |
 
 上下文：最近 20 条完整保留，更早的可摘要（MiniMax）。生成：墙钟 90 秒、正文硬顶 600 字。
-
-## 运行
-
-**真实入口——只有这一条：**
-
-```bat
-start-electron.bat
-```
-
-可选：`start-electron.bat debug`（可见宿主 + `desktop-electron/launch.log`）· `start-electron.bat rebuild`（先重建前端再启动）。
-
-两阶段启动（`scripts/start-electron.ps1` + `scripts/groupchat-lifecycle.ps1`）：
-
-1. 启动或复用 FastAPI `:8000` 与 Next `:3000`（清孤儿端口；lifecycle 写入 `frontend/public/runtime-config.js`）。
-2. 用 `--no-spawn` 打开 Electron。关窗执行 lifecycle **stop**，释放两个端口。
-
-不要把单独的 `uvicorn` / `next dev` 当成产品入口。
-
-密钥放在 **已被 gitignore** 的 `.env`（仓库根或 `backend/.env`）。管理后台 ⚙（`POST /api/admin/config`）会把供应商和 key 写进该文件——**禁止提交**。没有 key 则走 mock。
-
-| 变量 | 含义 |
-| --- | --- |
-| `USE_MOCK_LLM` | 强制 mock，压过 Letta 与真实供应商。 |
-| `USE_LETTA` | 默认 true。mock 仍优先。Letta 挂了回退分角色供应商。 |
-| `GC_LOOPS_ENABLED` | 默认 true → 启 `BehaviorCoordinator`。`false` → 旧 cron。 |
-| `MINIMAX_API_KEY` / `AGNES_API_KEY` / … | 各供应商密钥。 |
 
 ## 测试
 
@@ -148,18 +166,6 @@ npx tsc --noEmit
 
 24 小时 soak runner 在 `backend/tests/soak_mvp_candidate.py`。**它不是已通过的产品门。** 真人场景验收（`docs/product/05_MVP_SCENARIO_ACCEPTANCE.md`）同样 **未完成**。
 
-## 诚实的功能开关
-
-| 表面 | 线上默认 | 说明 |
-| --- | --- | --- |
-| 壁纸 | 静态 CSS `.chat-wallpaper`（深墨金） | `frontend/public/backgrounds/chat-ink-xianxia.png` 在磁盘上，**代码未引用**。 |
-| 动态舞台 / 天气 | **关，且未挂载** | 模块在 `frontend/lib/world` 与 `frontend/components/world`。开关：`NEXT_PUBLIC_WORLD_STAGE=1`、`?worldStage=1`、`localStorage xz-world-stage`。`ChatRoom` / `layout` / `page` **没有** import `AppAtmosphere` / `WorldStage` / 测试轮盘。Admin ⚙ **没有**「动态舞台」开关。雨雪不是产品默认。 |
-| 语音 / 视频 | 占位按钮 | 只有 toast。无 WebRTC / 信令。 |
-| LangGraph 循环 | 未上线 | `stream_group_chat` 走引擎。 |
-| `NpcLoop` × 6 | 仅兼容 | 不得重新成为默认主动路径。 |
-| Postgres | 未接入 | 只有 SQLite。 |
-| 多真人群聊 | 范围外 | 一人 + 六 NPC。 |
-
 ## 状态
 
 阶段：**Stage10-World-Stage**，分支 `main`。工程候选：事件驱动评分、可沉默、`@`/DM 兜底、幂等审计回放、单一协调器。
@@ -174,3 +180,7 @@ npx tsc --noEmit
 - [`docs/README.md`](docs/README.md) — 文档地图
 - [`docs/decisions/0007-npc-self-driven.md`](docs/decisions/0007-npc-self-driven.md) — 主动发言 ADR
 - [`docs/screenshots/`](docs/screenshots/) — 视觉证据
+
+## 许可
+
+[MIT](LICENSE) · Copyright (c) 2026 Player-YN

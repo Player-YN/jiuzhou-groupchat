@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200" height="360" viewBox="0 0 1200 360"
+     role="img" aria-labelledby="title desc">
+  <title id="title">九州一号群</title>
+  <desc id="desc">持续群聊社交模拟：一个真人与六个固定小说角色。确定性规则选出零、一或两个发言者，也可以全员沉默。</desc>
+
+  <defs>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2A2620"/>
+      <stop offset="55%" stop-color="#1F1F1F"/>
+      <stop offset="100%" stop-color="#1A1814"/>
+    </linearGradient>
+    <radialGradient id="goldhaze" cx="78%" cy="18%" r="48%">
+      <stop offset="0%" stop-color="#C7A969" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#C7A969" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="360" rx="26" fill="url(#ink)"/>
+  <rect width="1200" height="360" rx="26" fill="url(#goldhaze)"/>
+  <rect x="1" y="1" width="1198" height="358" rx="25" fill="none" stroke="#C7A969" stroke-opacity="0.28"/>
+
+  <g id="title-block" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Serif SC', sans-serif">
+    <text x="56" y="68" fill="#C7A969" font-size="15" letter-spacing="3.2">持续群聊社交模拟</text>
+    <text x="56" y="128" fill="#E8E1D4" font-size="48" font-weight="700">九州一号群</text>
+    <text x="56" y="172" fill="#A8A095" font-size="20">一个真人，六个固定小说角色。</text>
+    <text x="56" y="200" fill="#A8A095" font-size="20">规则选出 0–2 人发言——也可以全员沉默。</text>
+
+    <rect x="56" y="232" width="148" height="34" rx="8" fill="#2A2620" stroke="#C7A969" stroke-opacity="0.35"/>
+    <text x="130" y="254" text-anchor="middle" fill="#C7A969" font-size="14">Windows 桌面</text>
+
+    <rect x="212" y="232" width="132" height="34" rx="8" fill="#2A2620" stroke="#C7A969" stroke-opacity="0.35"/>
+    <text x="278" y="254" text-anchor="middle" fill="#C7A969" font-size="14">六人固定班底</text>
+
+    <rect x="352" y="232" width="148" height="34" rx="8" fill="#2A2620" stroke="#C7A969" stroke-opacity="0.35"/>
+    <text x="426" y="254" text-anchor="middle" fill="#C7A969" font-size="14">沉默是合法结果</text>
+
+    <text x="56" y="314" fill="#6B655A" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16">start-electron.bat</text>
+  </g>
+
+  <g id="project-proof" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Serif SC', sans-serif">
+    <text x="680" y="56" fill="#6B655A" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" letter-spacing="1.4">示意 · 发言策略</text>
+    <text x="680" y="80" fill="#E8E1D4" font-size="16">BehaviorEngine.decide() · 最多 2 人</text>
+
+    <rect x="680" y="98" width="200" height="62" rx="10" fill="#161410" stroke="#C7A969" stroke-opacity="0.16"/>
+    <circle cx="704" cy="129" r="8" fill="#C7A969" fill-opacity="0.35"/>
+    <text x="722" y="125" fill="#E8E1D4" font-size="16">宋书航</text>
+    <text x="722" y="145" fill="#6B655A" font-size="13">沉默</text>
+
+    <rect x="892" y="98" width="200" height="62" rx="10" fill="#161410" stroke="#C7A969" stroke-opacity="0.16"/>
+    <circle cx="916" cy="129" r="8" fill="#5C7367"/>
+    <text x="934" y="125" fill="#E8E1D4" font-size="16">药师</text>
+    <text x="934" y="145" fill="#6B655A" font-size="13">沉默</text>
+
+    <rect x="680" y="172" width="200" height="62" rx="10" fill="#2A2620" stroke="#C7A969"/>
+    <circle cx="704" cy="203" r="8" fill="#8B3A3A"/>
+    <text x="722" y="199" fill="#E8E1D4" font-size="16">狂刀三浪</text>
+    <text x="722" y="219" fill="#C7A969" font-size="13">发言</text>
+
+    <rect x="892" y="172" width="200" height="62" rx="10" fill="#161410" stroke="#C7A969" stroke-opacity="0.16"/>
+    <circle cx="916" cy="203" r="8" fill="#4A6B78"/>
+    <text x="934" y="199" fill="#E8E1D4" font-size="16">北河散人</text>
+    <text x="934" y="219" fill="#6B655A" font-size="13">沉默</text>
+
+    <rect x="680" y="246" width="200" height="62" rx="10" fill="#2A2620" stroke="#C7A969"/>
+    <circle cx="704" cy="277" r="8" fill="#C9C4B8"/>
+    <text x="722" y="273" fill="#E8E1D4" font-size="16">白前辈</text>
+    <text x="722" y="293" fill="#C7A969" font-size="13">发言</text>
+
+    <rect x="892" y="246" width="200" height="62" rx="10" fill="#161410" stroke="#C7A969" stroke-opacity="0.16"/>
+    <circle cx="916" cy="277" r="8" fill="#B07AB0"/>
+    <text x="934" y="273" fill="#E8E1D4" font-size="16">灵蝶尊者</text>
+    <text x="934" y="293" fill="#6B655A" font-size="13">沉默</text>
+  </g>
+</svg>
